@@ -1,17 +1,17 @@
-# Vagrant box configuration details image of the box to use
-$box = "rancherio/rancheros"
-
-# Version of the box image
-$box_version = '>= 308.0.1'
-
 # Official CoreOS channel. Either alpha, beta or stable
 $update_channel = "alpha"
 
+# Vagrant box configuration details image of the os to use
+$os = "coreos-%s" % $update_channel
+
+# Version of the box image
+$os_version = '>= 308.0.1'
+
 # URL to pull CoreOS image from
-$box_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json" % $update_channel
+$os_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json" % $update_channel
 
 # Tag of the rancher/server image to run
- $rancher_version = 'latest'
+$rancher_version = 'latest'
 
 # IP prefix to use when assigning box ip addresses
 $ip_prefix = '10.0.0'
@@ -41,24 +41,3 @@ $boxes = [
       "labels" => ["type=general"]
     },
 ]
-
-$new_discovery_url='https://discovery.etcd.io/new'
-
-if File.exists?('user-data') && ARGV[0].eql?('up')
-  require 'open-uri'
-  require 'yaml'
- 
-  token = open($new_discovery_url).read
- 
-  data = YAML.load(IO.readlines('user-data')[1..-1].join)
-  data['coreos']['etcd']['discovery'] = token
- 
-  yaml = YAML.dump(data)
-  File.open('user-data', 'w') { |file| file.write("#cloud-config\n\n#{yaml}") }
- 
-  data = YAML.load(IO.readlines('mgmt-user-data')[1..-1].join)
-  data['coreos']['etcd']['discovery'] = token
- 
-  yaml = YAML.dump(data)
-  File.open('mgmt-user-data', 'w') { |file| file.write("#cloud-config\n\n#{yaml}") }
-end

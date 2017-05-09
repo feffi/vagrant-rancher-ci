@@ -1,5 +1,10 @@
+# Created by https://www.gitignore.io/api/vagrant
+
+### Vagrant ###
+.vagrant/
 *.box
-.vagrant
 *.swp
 .vagrant_plugin_check
 log/
+
+# End of https://www.gitignore.io/api/vagrant

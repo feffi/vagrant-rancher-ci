@@ -1,14 +1,10 @@
 require 'fileutils'
 
-Vagrant.require_version ">= 1.6.0"
-
-CLOUD_CONFIG_PATH = File.join(File.dirname(__FILE__), "user-data")
-CLOUD_MGMT_CONFIG_PATH = File.join(File.dirname(__FILE__), "mgmt-user-data")
-CONFIG = File.join(File.dirname(__FILE__), "config.rb")
+Vagrant.require_version ">= 1.9.4"
 
 # set defaults
 $boxes = []
-$box = 'rancherio/rancheros'
+$os = 'rancherio/rancheros'
 $box_url = nil
 $box_version = nil
 $rancher_version = 'latest'
@@ -21,6 +17,7 @@ $proxies = {
 }
 
 # read and load the config file
+CONFIG = File.join(File.dirname(__FILE__), "config.rb")
 if File.exist?(CONFIG)
     require CONFIG
 end
@@ -44,11 +41,6 @@ def parse_boxes(boxes)
   agents = []
   boxes.each do |box|
     abort 'Must specify name for box' if box['name'].nil?
-    if $box == 'rancherio/rancheros'
-      if !box['memory'].nil? and box['memory'].to_i < 512
-        puts 'WARNING: Running RancherOS on less than 512MB of RAM has been known to cause issues.'
-      end
-    end
     if !box['role'].nil? and box['role'] == 'server'
       servers.push(box)
     else
@@ -81,10 +73,10 @@ $sorted_boxes = parse_boxes $boxes
 $default_server_ip = get_server_ip $sorted_boxes
 
 Vagrant.configure(2) do |config|
-  
+
   # global config
   config.ssh.insert_key = false
-  
+
   # plugin conflict
   if Vagrant.has_plugin?("vagrant-vbguest") then
     config.vbguest.auto_update = false
@@ -96,9 +88,9 @@ Vagrant.configure(2) do |config|
     v.functional_vboxsf     = false
   end
 
-  config.vm.box = "coreos-%s" % $update_channel
-  config.vm.box_url = $box_url unless $box_url.nil?
-  config.vm.box_version = $box_version unless $box_version.nil?
+  config.vm.box = $os
+  config.vm.box_url = $os_url unless $os_url.nil?
+  config.vm.box_version = $os_version unless $os_version.nil?
   config.vm.guest = :coreos
 
   if $disable_folder_sync
@@ -162,8 +154,6 @@ Vagrant.configure(2) do |config|
             rancher.project = box['project'] unless box['project'].nil?
             rancher.project_type = box['project_type'] unless box['project_type'].nil?
           end
-          config.vm.provision :file, :source => "#{CLOUD_MGMT_CONFIG_PATH}", :destination => "/tmp/vagrantfile-user-data"
-          config.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
         else
           node.vm.provision :rancher do |rancher|
             rancher.role = 'agent'
@@ -173,8 +163,6 @@ Vagrant.configure(2) do |config|
             rancher.project = box['project'] unless box['project'].nil?
             rancher.project_type = box['project_type'] unless box['project_type'].nil?
           end
-          config.vm.provision :file, :source => "#{CLOUD_CONFIG_PATH}", :destination => "/tmp/vagrantfile-user-data"
-          config.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
         end
       end
     end
