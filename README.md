@@ -29,8 +29,8 @@ You can configure the vagrant environment by customizing `config.rb`. The availa
 
 ### Proxies
 
-| Item            | Type     | Required | Default   | Description                                          |
-|-----------------|----------|----------|----- -----|------------------------------------------------------|
+| Item                   | Type     | Required | Default        | Description                                                        |
+|------------------------|----------|----------|----------------|--------------------------------------------------------------------|
 | `http`          | *string* | false    | `nil`     | URL or IP of the proxy to use                        |
 | `https`         | *string* | false    | `nil`     | URL or IP of the proxy to use                        |
 | `no_proxy`      | *string* | false    | `nil`     | URLs or IPs of the proxy exclusions, comma separated |
@@ -38,7 +38,7 @@ You can configure the vagrant environment by customizing `config.rb`. The availa
 
 ### Boxes
 
-| Item            | Type     | Required | Default                                        | Description                                                                           |
+| Item            | Type     | Required | Default                       | Description                |
 |-----------------|----------|----------|------------------------------------------------|---------------------------------------------------------------------------------------|
 | `name`          | *string* | true     |                                                | Base name of the box                                                                  |
 | `count`         | *string* | false    | 1                                              | Number of guests to create with this config                                           |
