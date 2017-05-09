@@ -90,7 +90,6 @@ Vagrant.configure(2) do |config|
     config.vbguest.auto_update = false
   end
 
-
   # On VirtualBox, we don't have guest additions or a functional vboxsf in CoreOS, so tell Vagrant that so it can be smarter.
   config.vm.provider :virtualbox do |v|
     v.check_guest_additions = false
@@ -100,7 +99,7 @@ Vagrant.configure(2) do |config|
   config.vm.box = "coreos-%s" % $update_channel
   config.vm.box_url = $box_url unless $box_url.nil?
   config.vm.box_version = $box_version unless $box_version.nil?
-  config.vm.guest = :linux
+  config.vm.guest = :coreos
 
   if $disable_folder_sync
     config.vm.synced_folder '.', '/vagrant', disabled: true
