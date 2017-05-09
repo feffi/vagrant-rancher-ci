@@ -31,11 +31,6 @@ You can configure the vagrant environment by customizing `config.rb`. The availa
 
 | Item                   | Type     | Required | Default        | Description                                                        |
 |------------------------|----------|----------|----------------|--------------------------------------------------------------------|
-| `$os`                  | *string* | false    | `coreos-alpha` | Vagrant box to use for the environment                             |
-
-
-| Item                   | Type     | Required | Default        | Description                                                        |
-|------------------------|----------|----------|----------------|--------------------------------------------------------------------|
 | `http`          | *string* | false    | `nil`     | URL or IP of the proxy to use                        |
 | `https`         | *string* | false    | `nil`     | URL or IP of the proxy to use                        |
 | `no_proxy`      | *string* | false    | `nil`     | URLs or IPs of the proxy exclusions, comma separated |
