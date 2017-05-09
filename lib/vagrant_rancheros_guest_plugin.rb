@@ -23,6 +23,28 @@ module VagrantPlugins
   end
 end
 
+#module VagrantPlugins
+#    module GuestLinux
+#        module Cap
+#            class ConfigureNetworks
+#                def self.configure_proxy(machine, proxies)
+#                    machine.communicate.tap do |comm|
+#
+#                      comm.sudo("ros config set rancher.network.http_proxy #{proxies["http"]}")
+#                      comm.sudo("ros config set rancher.network.https_proxy #{proxies["https"]}")
+#                      comm.sudo("ros config set rancher.network.no_proxy #{proxies["no_proxy"]}")
+#
+#                      comm.sudo("ros config set rancher.docker.environment.http_proxy #{proxies["http"]}")
+#                      comm.sudo("ros config set rancher.docker.environment.https_proxy #{proxies["https"]}")
+#                      comm.sudo("ros config set rancher.docker.environment.no_proxy #{proxies["no_proxy"]}")
+#                      comm.sudo("system-docker restart network")
+#                    end
+#                end
+#            end
+#        end
+#    end
+#end
+
 module VagrantPlugins
     module GuestLinux
         module Cap

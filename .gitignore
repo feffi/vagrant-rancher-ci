@@ -2,3 +2,4 @@
 .vagrant
 *.swp
 .vagrant_plugin_check
+log/
