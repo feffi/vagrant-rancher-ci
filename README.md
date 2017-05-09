@@ -5,8 +5,8 @@ Automated local Rancher environments using Vagrant
 ## Install
 
 ```
-git clone https://github.com/feffi/vagrant-rancher
-cd vagrant-rancher
+git clone https://github.com/feffi/vagrant-rancher-ci.git
+cd vagrant-rancher-ci
 vagrant up
 ```
 
@@ -16,15 +16,25 @@ If you used the defaults, browse to [http://10.0.0.11:8080](http://10.0.0.11:808
 
 You can configure the vagrant environment by customizing `config.rb`. The available configuration options are:
 
-| Item                   | Type     | Required | Default             | Description                                                              |
-|------------------------|----------|----------|---------------------|--------------------------------------------------------------------------|
-| `$box`                 | *string* | false    | rancherio/rancheros | Vagrant box to use for the environment                                   |
-| `$box_url`             | *string* | false    | `nil`               | URL to download the box                                                  |
-| `$box_version`         | *string* | false    | `nil`               | Version of the box to download                                           |
-| `$disable_folder_sync` | *bool*   | false    | `true`              | Disable syncing the current working directory to "/vagrant" on the guest |
-| `$ip_prefix`           | *string* | false    | 192.168.33          | Prefix for all IPs assigned to the guests                                |
-| `$rancher_version`     | *string* | false    | latest              | Version of Rancher to deploy                                             |
-| `$boxes`               | *array*  | true     | `[]`                | List of boxes (see [Boxes](#boxes) table below)                                  |
+| Item                   | Type     | Required | Default        | Description                                                        |
+|------------------------|----------|----------|----------------|--------------------------------------------------------------------|
+| `$os`                  | *string* | false    | `coreos-alpha` | Vagrant box to use for the environment                             |
+| `$os_url`              | *string* | false    | [Link](http://alpha.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json)               | URL to download the box                                                  |
+| `$os_version`          | *string* | false    | `>= 308.0.1`   | Version of the box to download                                     |
+| `$disable_folder_sync` | *bool*   | false    | `true`         | Disable syncing the current working directory to "/vagrant" on the guest |
+| `$ip_prefix`           | *string* | false    | 10.0.0         | Prefix for all IPs assigned to the guests                          |
+| `$rancher_version`     | *string* | false    | `latest`       | Version of Rancher to deploy                                       |
+| `$proxies`             | *array*  | false    | `[]`           | Proxies to set in boxes (see [Proxies](#proxies) table below)      |
+| `$boxes`               | *array*  | true     | `[]`           | List of boxes (see [Boxes](#boxes) table below)                    |
+
+### Proxies
+
+| Item            | Type     | Required | Default   | Description                                          |
+|-----------------|----------|----------|----- -----|------------------------------------------------------|
+| `http`          | *string* | false    | `nil`     | URL or IP of the proxy to use                        |
+| `https`         | *string* | false    | `nil`     | URL or IP of the proxy to use                        |
+| `no_proxy`      | *string* | false    | `nil`     | URLs or IPs of the proxy exclusions, comma separated |
+
 
 ### Boxes
 
@@ -42,4 +52,49 @@ You can configure the vagrant environment by customizing `config.rb`. The availa
 
 ## Example
 
-See [config.rb](config.rb)
+See [config.rb](config.rb) or use:
+```
+# Official CoreOS channel. Either alpha, beta or stable
+$update_channel = "alpha"
+
+# Vagrant box configuration details image of the os to use
+$os = "coreos-%s" % $update_channel
+
+# Version of the box image
+$os_version = '>= 308.0.1'
+
+# URL to pull CoreOS image from
+$os_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json" % $update_channel
+
+# Tag of the rancher/server image to run
+$rancher_version = 'latest'
+
+# IP prefix to use when assigning box ip addresses
+$ip_prefix = '10.0.0'
+
+# Enable syncing of the current directory to the /vagrant path on the guest
+$disable_folder_sync = false
+
+# Proxy configure on boxes, defaults to none if not defined
+#$proxies = {
+#  "http" => "http://<ip or url>:<port>/",
+#  "https" => "https://<ip or url>:<port>/",
+#  "no_proxy" => "localhost,127.0.0.1,<ip or url>"
+#}
+
+# Boxes to create in the vagrant environment
+$boxes = [
+    {
+      "name"   => "rancher-server",
+      "role"   => "server",
+      "memory" => "1536",
+      "labels" => [],
+    },
+    {
+      "name"   => "rancher-agent",
+      "count"  => 4,
+      "memory" => "512",
+      "labels" => ["type=general"]
+    },
+]
+```

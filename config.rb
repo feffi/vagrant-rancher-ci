@@ -36,7 +36,7 @@ $boxes = [
     },
     {
       "name"   => "rancher-agent",
-      "count"  => 1,
+      "count"  => 4,
       "memory" => "512",
       "labels" => ["type=general"]
     },
