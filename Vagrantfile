@@ -4,9 +4,10 @@ Vagrant.require_version ">= 1.9.4"
 
 # set defaults
 $boxes = []
-$os = 'rancherio/rancheros'
-$box_url = nil
-$box_version = nil
+$update_channel = "alpha"
+$os = "coreos-%s" % $update_channel
+$os_version = '>= 308.0.1'
+$os_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json" % $update_channel
 $rancher_version = 'latest'
 $ip_prefix = '10.0.0'
 $disable_folder_sync = true

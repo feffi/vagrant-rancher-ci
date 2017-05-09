@@ -38,6 +38,6 @@ $boxes = [
       "name"   => "rancher-agent",
       "count"  => 4,
       "memory" => "512",
-      "labels" => ["type=general"]
+      "labels" => []
     },
 ]
