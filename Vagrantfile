@@ -74,11 +74,6 @@ def get_server_ip(boxes, hostname='')
   return default_server_ip
 end
 
-# require some capability overrides if the box is rancheros
-#if $box == 'rancherio/rancheros'
-#  require_relative 'lib/vagrant_rancheros_guest_plugin.rb'
-#end
-
 # sort boxes
 $sorted_boxes = parse_boxes $boxes
 
@@ -102,32 +97,15 @@ Vagrant.configure(2) do |config|
     v.functional_vboxsf     = false
   end
 
-  # Try to use a custom CoreOS box
-#  if $update_channel != nil
-      config.vm.box = "coreos-%s" % $update_channel
-      config.vm.box_url = $box_url unless $box_url.nil?
-      config.vm.box_version = $box_version unless $box_version.nil?
-      config.vm.guest = :linux
-#  else
-#      # Default to RancherOS
-#      config.vm.box = $box
-#      config.vm.box_url = $box_url unless $box_url.nil?
-#      config.vm.box_version = $box_version unless $box_version.nil?
-#      config.vm.guest = :linux
-#  end
+  config.vm.box = "coreos-%s" % $update_channel
+  config.vm.box_url = $box_url unless $box_url.nil?
+  config.vm.box_version = $box_version unless $box_version.nil?
+  config.vm.guest = :linux
 
   if $disable_folder_sync
     config.vm.synced_folder '.', '/vagrant', disabled: true
-#  else
-#    # if box is rancheros use rsync
-#    if $box == 'rancherio/rancheros'
-#      config.vm.synced_folder ".", "/vagrant", type: "rsync",
-#        rsync__exclude: ".git/",
-#        rsync__args: ["--verbose", "--archive", "--delete", "--copy-links"],
-#        disabled: false
-    else
-      config.vm.synced_folder '.', '/vagrant', disabled: false
-#    end
+  else
+    config.vm.synced_folder '.', '/vagrant', disabled: false
   end
 
   # Set correct proxies if defined, defaults to none
