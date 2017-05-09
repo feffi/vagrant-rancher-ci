@@ -26,12 +26,6 @@ $disable_folder_sync = false
 #  "no_proxy" => "localhost,127.0.0.1,<ip or url>"
 #}
 
-$proxies = {
-  "http" => "http://172.20.249.23:8080/",
-  "https" => "http://172.20.249.23:8080/",
-  "no_proxy" => "localhost,127.0.0.1,*.f-i-sp.int,*.1822-s-inform.de"
-}
-
 # Boxes to create in the vagrant environment
 $boxes = [
     {
