@@ -133,14 +133,26 @@ Vagrant.configure(2) do |config|
 
     # loop instances
     (1..count).each do |i|
+      # configure network
       hostname = "#{box['name']}-%02d" % i
       config.vm.define hostname do |node|
         node.vm.hostname = hostname
         ip = box['ip'] ? box['ip'] : "#{$ip_prefix}.#{box_index+1}#{i}"
         node.vm.network 'private_network', ip: ip
+
+        # configure hardware
         unless box['memory'].nil?
           node.vm.provider 'virtualbox' do |vb|
             vb.memory = box['memory']
+            vb.customize ["modifyvm", :id, "--vram", "2"]
+            vb.customize ["modifyvm", :id, "--cpuhotplug", "on"]
+            vb.customize ["modifyvm", :id, "--ioapic", "on"]
+            vb.customize ["modifyvm", :id, "--hwvirtex", "on"]
+            vb.customize ["modifyvm", :id, "--boot1", "disk"]
+            vb.customize ["modifyvm", :id, "--boot2", "none"]
+            vb.customize ["modifyvm", :id, "--boot3", "none"]
+            vb.customize ["modifyvm", :id, "--boot4", "none"]
+            vb.customize ["storageattach", :id, "--storagectl", "IDE Controller", '--port', '0', '--device', '0', '--nonrotational', 'on']
           end
         end
 

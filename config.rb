@@ -40,4 +40,12 @@ $boxes = [
       "memory" => "512",
       "labels" => []
     },
+    {
+      "name"   => "kuby-agent",
+      "count"  => 4,
+      "memory" => "512",
+      "labels" => [],
+      "project" => "kuby",
+      "project_type" => "kubernetes"
+    },
 ]
