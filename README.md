@@ -94,7 +94,15 @@ $boxes = [
       "name"   => "rancher-agent",
       "count"  => 4,
       "memory" => "512",
-      "labels" => ["type=general"]
+      "labels" => []
+    },
+    {
+      "name"   => "kuby-agent",
+      "count"  => 4,
+      "memory" => "512",
+      "labels" => [],
+      "project" => "kuby",
+      "project_type" => "kubernetes"
     },
 ]
 ```
