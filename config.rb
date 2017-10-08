@@ -5,7 +5,7 @@ $update_channel = "alpha"
 $os = "coreos-%s" % $update_channel
 
 # Version of the box image
-$os_version = '>= 308.0.1'
+$os_version = '>= 1548.0.0'
 
 # URL to pull CoreOS image from
 $os_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json" % $update_channel
@@ -34,18 +34,18 @@ $boxes = [
       "memory" => "1536",
       "labels" => [],
     },
+#    {
+#      "name"   => "rancher-agent",
+#      "count"  => 4,
+#      "memory" => "512",
+#      "labels" => []
+#    },
     {
-      "name"   => "rancher-agent",
-      "count"  => 4,
-      "memory" => "512",
-      "labels" => []
-    },
-    {
-      "name"   => "kuby-agent",
+      "name"   => "k8s-nodes",
       "count"  => 4,
       "memory" => "512",
       "labels" => [],
-      "project" => "kuby",
-      "project_type" => "kubernetes"
+#      "project" => "k8s",
+#      "project_type" => "kubernetes"
     },
 ]

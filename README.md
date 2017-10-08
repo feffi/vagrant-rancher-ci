@@ -20,7 +20,7 @@ You can configure the vagrant environment by customizing `config.rb`. The availa
 |------------------------|----------|----------|----------------|--------------------------------------------------------------------|
 | `$os`                  | *string* | false    | `coreos-alpha` | Vagrant box to use for the environment                             |
 | `$os_url`              | *string* | false    | [Link](http://alpha.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json)               | URL to download the box                                                  |
-| `$os_version`          | *string* | false    | `>= 308.0.1`   | Version of the box to download                                     |
+| `$os_version`          | *string* | false    | `>= 1548.0.0`   | Version of the box to download                                     |
 | `$disable_folder_sync` | *bool*   | false    | `true`         | Disable syncing the current working directory to "/vagrant" on the guest |
 | `$ip_prefix`           | *string* | false    | 10.0.0         | Prefix for all IPs assigned to the guests                          |
 | `$rancher_version`     | *string* | false    | `latest`       | Version of Rancher to deploy                                       |
@@ -61,7 +61,7 @@ $update_channel = "alpha"
 $os = "coreos-%s" % $update_channel
 
 # Version of the box image
-$os_version = '>= 308.0.1'
+$os_version = '>= 1548.0.0'
 
 # URL to pull CoreOS image from
 $os_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json" % $update_channel
@@ -91,17 +91,17 @@ $boxes = [
       "labels" => [],
     },
     {
-      "name"   => "rancher-agent",
+      "name"   => "rancher-nodes",
       "count"  => 4,
       "memory" => "512",
       "labels" => []
     },
     {
-      "name"   => "kuby-agent",
+      "name"   => "k8s-nodes",
       "count"  => 4,
       "memory" => "512",
       "labels" => [],
-      "project" => "kuby",
+      "project" => "k8s",
       "project_type" => "kubernetes"
     },
 ]
