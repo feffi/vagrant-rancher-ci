@@ -26,7 +26,8 @@ end
 # install the vagrant-rancher provisioner plugin
 unless Vagrant.has_plugin?('vagrant-rancher')
   puts 'vagrant-rancher plugin not found, installing...'
-  `vagrant plugin install vagrant-rancher`
+  #`vagrant plugin install vagrant-rancher`
+  `vagrant plugin install ./vagrant-rancher-provisioner`
   abort 'vagrant-rancher plugin installed, but you need to rerun the vagrant command'
 end
 

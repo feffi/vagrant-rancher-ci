@@ -11,7 +11,7 @@ $os_version = '>= 1548.0.0'
 $os_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json" % $update_channel
 
 # Tag of the rancher/server image to run
-$rancher_version = 'latest'
+$rancher_version = 'v2.0.0-alpha10'
 
 # IP prefix to use when assigning box ip addresses
 $ip_prefix = '10.0.0'
@@ -35,13 +35,13 @@ $boxes = [
       "labels" => [],
     },
 #    {
-#      "name"   => "rancher-agent",
+#      "name"   => "rancher-node",
 #      "count"  => 4,
 #      "memory" => "512",
 #      "labels" => []
 #    },
     {
-      "name"   => "k8s-nodes",
+      "name"   => "k8s-node",
       "count"  => 4,
       "memory" => "512",
       "labels" => [],
