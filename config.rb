@@ -14,10 +14,10 @@ $os_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vag
 $rancher_version = 'v2.0.0-alpha10'
 
 # IP prefix to use when assigning box ip addresses
-$ip_prefix = '10.0.0'
+$ip_prefix = '10.2.0'
 
 # Enable syncing of the current directory to the /vagrant path on the guest
-$disable_folder_sync = false
+$folder_sync = false
 
 # Proxy configure on boxes, defaults to none if not defined
 #$proxies = {
@@ -28,24 +28,16 @@ $disable_folder_sync = false
 
 # Boxes to create in the vagrant environment
 $boxes = [
-    {
-      "name"   => "rancher-server",
-      "role"   => "server",
-      "memory" => "1536",
-      "labels" => [],
-    },
-#    {
-#      "name"   => "rancher-node",
-#      "count"  => 4,
-#      "memory" => "512",
-#      "labels" => []
-#    },
-    {
-      "name"   => "k8s-node",
-      "count"  => 4,
-      "memory" => "512",
-      "labels" => [],
-#      "project" => "k8s",
-#      "project_type" => "kubernetes"
-    },
+  {
+    "name"   => "rancher-server",
+    "role"   => "server",
+    "memory" => "1536",
+    "labels" => [],
+  },
+  {
+    "name"   => "k8s-node",
+    "count"  => 1,
+    "memory" => "512",
+    "labels" => []
+  },
 ]

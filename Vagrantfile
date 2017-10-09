@@ -8,9 +8,9 @@ $update_channel = "alpha"
 $os = "coreos-%s" % $update_channel
 $os_version = '>= 1548.0.0'
 $os_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json" % $update_channel
-$rancher_version = 'latest'
-$ip_prefix = '10.0.0'
-$disable_folder_sync = true
+$rancher_version = 'v2.0.0-alpha10'
+$ip_prefix = '10.2.0'
+$folder_sync = true
 $proxies = {
   "http" => nil,
   "https" => nil,
@@ -24,11 +24,11 @@ if File.exist?(CONFIG)
 end
 
 # install the vagrant-rancher provisioner plugin
-unless Vagrant.has_plugin?('vagrant-rancher')
-  puts 'vagrant-rancher provisioner plugin not found, installing...'
+unless Vagrant.has_plugin?('vagrant-rancher-v3')
+  puts 'vagrant-rancher-v3 provisioner plugin not found, installing...'
   #`vagrant plugin install vagrant-rancher`
-  `vagrant plugin install ./vagrant-rancher/pkg/vagrant-rancher-1.0.0.gem`
-  abort 'vagrant-rancher provisioner plugin installed, but you need to rerun the vagrant command'
+  `vagrant plugin install ./vagrant-rancher/pkg/vagrant-rancher-v3-1.0.0.gem`
+  abort 'vagrant-rancher-v3 provisioner plugin installed, but you need to rerun the vagrant command'
 end
 
 unless Vagrant.has_plugin?('vagrant-proxyconf')
@@ -95,9 +95,8 @@ Vagrant.configure(2) do |config|
   config.vm.box_version = $os_version unless $os_version.nil?
   config.vm.guest = :coreos
 
-  if $disable_folder_sync
-    config.vm.synced_folder '.', '/vagrant', disabled: true
-  else
+  config.vm.synced_folder '.', '/vagrant', disabled: true
+  if $folder_sync
     config.vm.synced_folder '.', '/vagrant', disabled: false
   end
 
@@ -165,8 +164,8 @@ Vagrant.configure(2) do |config|
             rancher.deactivate = true
             rancher.install_agent = box['install_agent'] || false
             rancher.labels = box['labels'] unless box['labels'].nil?
-            rancher.project = box['project'] unless box['project'].nil?
-            rancher.project_type = box['project_type'] unless box['project_type'].nil?
+            #rancher.project = box['project'] unless box['project'].nil?
+            #rancher.project_type = box['project_type'] unless box['project_type'].nil?
           end
         else
           node.vm.provision :rancher do |rancher|
@@ -174,8 +173,8 @@ Vagrant.configure(2) do |config|
             rancher.hostname = box['server'] || $default_server_ip
             rancher.install_agent = box['install_agent'] unless box['install_agent'].nil?
             rancher.labels = box['labels'] unless box['labels'].nil?
-            rancher.project = box['project'] unless box['project'].nil?
-            rancher.project_type = box['project_type'] unless box['project_type'].nil?
+            #rancher.project = box['project'] unless box['project'].nil?
+            #rancher.project_type = box['project_type'] unless box['project_type'].nil?
           end
         end
       end
