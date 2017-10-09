@@ -24,11 +24,16 @@ if File.exist?(CONFIG)
 end
 
 # install the vagrant-rancher provisioner plugin
-unless Vagrant.has_plugin?('vagrant-rancher-v3')
-  puts 'vagrant-rancher-v3 provisioner plugin not found, installing...'
-  #`vagrant plugin install vagrant-rancher`
-  `vagrant plugin install ./vagrant-rancher/pkg/vagrant-rancher-v3-1.0.0.gem`
-  abort 'vagrant-rancher-v3 provisioner plugin installed, but you need to rerun the vagrant command'
+unless Vagrant.has_plugin?('vagrant-rancher')
+  puts 'vagrant-rancher provisioner plugin not found, installing...'
+  `vagrant plugin install vagrant-rancher`
+  abort 'vagrant-rancher provisioner plugin installed, but you need to rerun the vagrant command'
+end
+
+unless Vagrant.has_plugin?('vagrant-address')
+  puts 'vagrant-address plugin not found, installing...'
+  `vagrant plugin install vagrant-address`
+  abort 'vagrant-address plugin installed, but you need to rerun the vagrant command'
 end
 
 unless Vagrant.has_plugin?('vagrant-proxyconf')
