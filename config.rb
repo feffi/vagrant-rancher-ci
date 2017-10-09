@@ -34,18 +34,18 @@ $boxes = [
       "memory" => "1536",
       "labels" => [],
     },
-#    {
-#      "name"   => "rancher-agent",
-#      "count"  => 4,
-#      "memory" => "512",
-#      "labels" => []
-#    },
     {
-      "name"   => "k8s-nodes",
-      "count"  => 4,
+      "name"   => "cattle-node",
+      "count"  => 2,
       "memory" => "512",
-      "labels" => [],
+      "labels" => []
+    }
+#    {
+#      "name"   => "k8s-node",
+#      "count"  => 2,
+#      "memory" => "512",
+#      "labels" => [],
 #      "project" => "k8s",
 #      "project_type" => "kubernetes"
-    },
+#    }
 ]
