@@ -1,13 +1,13 @@
 begin
   require 'vagrant'
 rescue LoadError
-  raise 'The vagrant-rancher-provisioner plugin must be run within Vagrant.'
+  raise 'The vagrant-rancher plugin must be run within Vagrant.'
 end
 
 module VagrantPlugins
   module Rancher
     class Plugin < Vagrant.plugin('2')
-      name 'vagrant-rancher-provisioner'
+      name 'vagrant-rancher'
       description <<-DESC.gsub(/^ +/, '')
         Vagrant plugin to install a Rancher server
         and agents on all Vagrant guests.

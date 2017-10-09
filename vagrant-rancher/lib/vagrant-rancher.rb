@@ -1,6 +1,6 @@
 module VagrantPlugins
   module Rancher
-    lib_path = Pathname.new(File.expand_path('../vagrant-rancher-provisioner', __FILE__))
+    lib_path = Pathname.new(File.expand_path('../vagrant-rancher', __FILE__))
     autoload :Errors, lib_path.join('errors')
 
     def self.source_root
@@ -9,4 +9,4 @@ module VagrantPlugins
   end
 end
 
-require 'vagrant-rancher-provisioner/plugin'
+require 'vagrant-rancher/plugin'

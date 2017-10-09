@@ -1,11 +1,11 @@
-# vagrant-rancher-provisioner
+# vagrant-rancher
 
 Vagrant plugin to install a Rancher server and agents on all vagrant guests.
 
 ## Installation
 
 ```
-vagrant plugin install vagrant-rancher-provisioner
+vagrant plugin install vagrant-rancher
 ```
 
 ## Requirements
@@ -30,7 +30,7 @@ Vagrant.configure("2") do |config|
 end
 ```
 
-The `vagrant-rancher-provisioner` plugin requires the hostname being set to either a DNS name or IP that is reachable by the host running the `vagrant` command.
+The `vagrant-rancher` plugin requires the hostname being set to either a DNS name or IP that is reachable by the host running the `vagrant` command.
 
 ### Options
 

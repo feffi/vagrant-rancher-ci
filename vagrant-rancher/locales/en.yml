@@ -39,6 +39,6 @@ en:
 
         %{error}
       project_not_found: |-
-        Unable to find project 'Default' in Rancher
+        Unable to find project 'System' in Rancher
       host_not_found: |-
         The Vagrant guest was not found in project %{project_id}
