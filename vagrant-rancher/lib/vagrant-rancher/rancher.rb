@@ -10,9 +10,8 @@ module VagrantPlugins
       end
 
       # waits for the rancher api to come online
-      def wait_for_api
-        uri = URI "http://#{@hostname}:#{@port}/v3"
-
+      def waitForApi(path = '')
+        uri = URI "http://#{@hostname}:#{@port}/v3#{path}"
         15.times do |i|
           begin
             Net::HTTP.get_response uri
@@ -22,32 +21,34 @@ module VagrantPlugins
             sleep 10
           end
         end
-
         true
       end
 
       # waits for the agent to register the host
-      def wait_for_agent(project_id, machine_id)
+      def waitForAgent(projectId, machineId)
         15.times do |i|
-          host = self.get_host project_id, machine_id
+          host = self.getHost projectId, machineId
           break unless host.nil?
           return false if i == 15
           sleep 10
         end
-
         true
       end
 
-      # retrieves the clusterId for a project id
-      def get_cluster_id(name)
-        project_id = get_project_id(name)
-        project = get_project(project_id)
-        return project['clusterId']
+      # retrieves and returns a project object
+      def getProjectById(id)
+        return self.api "/v3/projects/#{id}"
       end
 
-      # retrieves the Default project id
-      def get_project_id(name)
-        project_id = nil
+      # retrieves and returns a project object
+      def getProjectByName(name = "System")
+        id = self.getProjectId(name)
+        return self.getProjectById(id)
+      end
+
+      # retrieves the project id
+      def getProjectId(name = "System")
+        id = nil
         response = self.api '/v3/projects'
         unless response.nil? or response['data'].empty?
           response['data'].each do |project|
@@ -59,35 +60,41 @@ module VagrantPlugins
         return nil
       end
 
-      # retrieves and returns a project object
-      def get_project(project_id)
-        return self.api "/v3/projects/#{project_id}"
+      # retrieves the clusterId for a project
+      def getClusterIdByName(name = "System")
+        project = getProjectByName(name)
+        return project['clusterId']
       end
 
       # retrieves and returns the id of the admin user
-      def get_admin_id
-        response = self.api '/v3/accounts?name=admin&kind=admin'
+      def getUserId(name = "admin", kind = "admin")
+        response = self.api '/v3/accounts?name=#{name}&kind=#{kind}'
         return response['data'][0]['id']
       end
 
       # retrieves a rancher host object
-      def get_host(project_id, machine_id)
+      def getHost(projectId, machineId)
         host = nil
-        response = self.api "/v3/projects/#{project_id}/hosts"
+        response = self.api "/v3/projects/#{projectId}/hosts"
+
+        #STDERR.puts response.inspect
+
+
         unless response.nil? or response['data'].empty?
           response['data'].each do |h|
-            host = h if h['labels'].values.include? machine_id
+            host = h if h['labels'].values.include? machineId
           end
         end
         host
       end
 
       # retrieves a registration token for a project
-      def get_registration_token(cluster_id)
-        response = self.api "/v3/clusters/#{cluster_id}"
-        return response['registrationToken']
+      def getRegistrationToken(clusterId)
+        response = self.api "/v3/clusters/#{clusterId}"
+        return response['registrationToken'] unless response['registrationToken'].nil?
+        nil
 
-        #headers = { 'x-api-project-id' => project_id }
+        #headers = { 'x-api-project-id' => projectId }
         #response = self.api '/v3/registrationtokens/', 'GET', headers
 
         #return response['data'][0] unless response['data'].empty?
@@ -95,7 +102,7 @@ module VagrantPlugins
       end
 
       # creates a new project
-      def create_project(name, clusterId)
+      def createProject(name, clusterId)
         data = {
           'name'       => name,
           'publicDns'  => false,
@@ -106,12 +113,12 @@ module VagrantPlugins
       end
 
       # sets the default project for a user
-      def set_default_project(user_id, project_id)
-        response = self.api "/v3/userpreferences?accountId=#{user_id}&name=defaultProjectId"
+      def setDefaultProject(userId, projectId)
+        response = self.api "/v3/userpreferences?accountId=#{userId}&name=defaultProjectId"
 
         data = {
           'name'      => 'defaultProjectId',
-          'value'     => project_id,
+          'value'     => projectId,
           'kind'      => 'userPreference',
           'type'      => 'userPreference',
           'accountId' => user_id,
@@ -120,33 +127,33 @@ module VagrantPlugins
         if response['data'].empty?
           self.api '/v3/userpreferences/', 'POST', nil, data
         else
-          preference_id = response['data'][0]['id']
-          self.api "/v3/userpreferences/#{preference_id}/?action=update", 'POST', nil, data
+          preferenceId = response['data'][0]['id']
+          self.api "/v3/userpreferences/#{preferenceId}/?action=update", 'POST', nil, data
         end
       end
 
       # deletes a project
-      def delete_project(project_id)
-        self.api "/v3/projects/#{project_id}/?action=delete", 'POST'
+      def deleteProject(projectId)
+        self.api "/v3/projects/#{projectId}/?action=delete", 'POST'
         sleep 2
-        self.api "/v3/projects/#{project_id}/?action=purge", 'POST'
+        self.api "/v3/projects/#{projectId}/?action=purge", 'POST'
       end
 
       # creates a registration token for a project
-      def create_registration_token(project_id)
-        headers = { 'x-api-project-id' => project_id }
+      def createRegistrationToken(projectId)
+        headers = { 'x-api-project-id' => projectId }
         self.api '/v3/registrationtokens/', 'POST', headers
       end
 
       # configures rancher settings
-      def configure_setting(setting, value)
-        self.api "/v3/activesettings/#{setting}", 'PUT', nil, 'value' => value
+      def configureSetting(setting, value)
+        self.api "/v3/settings/#{setting}", 'PUT', nil, 'value' => value
       end
 
       # deactivates a host in rancher to avoid being scheduled on
-      def deactivate_host(project_id, host_id)
-        headers = { 'x-api-project-id' => project_id }
-        self.api "/v3/projects/#{project_id}/hosts/#{host_id}/?action=deactivate", 'POST', headers
+      def deactivateHost(projectId, hostId)
+        headers = { 'x-api-project-id' => projectId }
+        self.api "/v3/projects/#{projectId}/hosts/#{hostId}/?action=deactivate", 'POST', headers
       end
 
       protected
@@ -159,6 +166,11 @@ module VagrantPlugins
         # to too many requests in a short time
         sleep 0.1
 
+        unless self.waitForApi path
+            raise Errors::ApiConnectionTimeout,
+              :host => @config.hostname,
+              :port => @config.port
+          end
         # attempt to start the http connection
         begin
           Net::HTTP.start(uri.host, uri.port) do |http|

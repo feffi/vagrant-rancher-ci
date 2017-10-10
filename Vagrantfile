@@ -2,15 +2,28 @@ require 'fileutils'
 
 Vagrant.require_version ">= 1.9.4"
 
-# set defaults
+# init defaults
 $boxes = []
-$update_channel = "alpha"
-$os = "coreos-%s" % $update_channel
-$os_version = '>= 1548.0.0'
-$os_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json" % $update_channel
-$rancher_version = 'v2.0.0-alpha10'
-$ip_prefix = '10.2.0'
-$folder_sync = true
+
+# The OS to use (here coreos alpha)
+$os = {
+  # Vagrant box configuration details image of the os to use
+  "vm" => "coreos-alpha",
+
+  # Version of the box image
+  "version" => '>= 1548.0.0',
+
+  # URL to pull OS image from
+  "url" => "http://alpha.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json"
+}
+
+# Tag of the rancher/server image to run
+$rancher = {
+  "version" => 'v2.0.0-alpha10'
+}
+
+$ipPrefix = '10.2.0'
+$folderSync = true
 $proxies = {
   "http" => nil,
   "https" => nil,
@@ -43,7 +56,7 @@ unless Vagrant.has_plugin?('vagrant-proxyconf')
 end
 
 # validate existance of rancher server
-def parse_boxes(boxes)
+def parseBoxes(boxes)
   servers = []
   agents = []
   boxes.each do |box|
@@ -59,25 +72,25 @@ def parse_boxes(boxes)
 end
 
 # loop boxes to get ip address of the first server box found
-def get_server_ip(boxes, hostname='')
-  default_server_ip = nil
+def getServerIp(boxes, hostname='')
+  defaultServerIp = nil
   boxes.each_with_index do |box, i|
     if not box['role'].nil? and box['role'] == 'server'
-      ip = box['ip'] ? box['ip'] : "#{$ip_prefix}.#{i+1}#{i+1}"
-      default_server_ip = ip if default_server_ip.nil?
+      ip = box['ip'] ? box['ip'] : "#{$ipPrefix}.#{i+1}#{i+1}"
+      defaultServerIp = ip if defaultServerIp.nil?
       if hostname == "#{box['name']}-%02d" % i
         return ip
       end
     end
   end
-  return default_server_ip
+  return defaultServerIp
 end
 
 # sort boxes
-$sorted_boxes = parse_boxes $boxes
+$sortedBoxes = parseBoxes $boxes
 
 # determine server ip
-$default_server_ip = get_server_ip $sorted_boxes
+$defaultServerIp = getServerIp $sortedBoxes
 
 Vagrant.configure(2) do |config|
 
@@ -95,13 +108,13 @@ Vagrant.configure(2) do |config|
     v.functional_vboxsf     = false
   end
 
-  config.vm.box = $os
-  config.vm.box_url = $os_url unless $os_url.nil?
-  config.vm.box_version = $os_version unless $os_version.nil?
+  config.vm.box = $os["vm"]
+  config.vm.box_url = $os["url"] unless $os["url"].nil?
+  config.vm.box_version = $os["version"] unless $os["version"].nil?
   config.vm.guest = :coreos
 
   config.vm.synced_folder '.', '/vagrant', disabled: true
-  if $folder_sync
+  if $folderSync
     config.vm.synced_folder '.', '/vagrant', disabled: false
   end
 
@@ -121,19 +134,19 @@ Vagrant.configure(2) do |config|
       config.proxy.no_proxy = $proxies['no_proxy']
 
       # Determine box ips for private networking
-      $sorted_boxes.each_with_index do |box, box_index|
+      $sortedBoxes.each_with_index do |box, boxIndex|
         count = box['count'] || 1
 
         # loop instances of agents
         (0..count).each do |i|
-          ip = box['ip'] ? box['ip'] : "#{$ip_prefix}.#{box_index+1}#{i}"
+          ip = box['ip'] ? box['ip'] : "#{$ipPrefix}.#{boxIndex+1}#{i}"
           config.proxy.no_proxy = config.proxy.no_proxy + "," + ip
         end
       end
     end
   end
 
-  $sorted_boxes.each_with_index do |box, box_index|
+  $sortedBoxes.each_with_index do |box, boxIndex|
     count = box['count'] || 1
 
     # loop instances
@@ -142,7 +155,7 @@ Vagrant.configure(2) do |config|
       hostname = "#{box['name']}-%02d" % i
       config.vm.define hostname do |node|
         node.vm.hostname = hostname
-        ip = box['ip'] ? box['ip'] : "#{$ip_prefix}.#{box_index+1}#{i}"
+        ip = box['ip'] ? box['ip'] : "#{$ipPrefix}.#{boxIndex+1}#{i}"
         node.vm.network 'private_network', ip: ip
 
         # configure hardware
@@ -165,9 +178,9 @@ Vagrant.configure(2) do |config|
           node.vm.provision :rancher do |rancher|
             rancher.role = 'server'
             rancher.hostname = ip
-            rancher.version = $rancher_version
+            rancher.version = $rancher['version']
             rancher.deactivate = true
-            rancher.install_agent = box['install_agent'] || false
+            rancher.agent = box['agent'] || false
             rancher.labels = box['labels'] unless box['labels'].nil?
             #rancher.project = box['project'] unless box['project'].nil?
             #rancher.project_type = box['project_type'] unless box['project_type'].nil?
@@ -175,8 +188,8 @@ Vagrant.configure(2) do |config|
         else
           node.vm.provision :rancher do |rancher|
             rancher.role = 'agent'
-            rancher.hostname = box['server'] || $default_server_ip
-            rancher.install_agent = box['install_agent'] unless box['install_agent'].nil?
+            rancher.hostname = box['server'] || $defaultServerIp
+            rancher.agent = box['agent'] unless box['agent'].nil?
             rancher.labels = box['labels'] unless box['labels'].nil?
             #rancher.project = box['project'] unless box['project'].nil?
             #rancher.project_type = box['project_type'] unless box['project_type'].nil?

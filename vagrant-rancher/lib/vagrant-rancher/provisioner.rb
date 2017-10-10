@@ -7,121 +7,104 @@ module VagrantPlugins
       def initialize(machine, config, rancher = nil)
         super(machine, config)
         @rancher = rancher || RancherClient.new(@config.hostname, @config.port)
+        # TODO: Routen hier eintragen
+        # @routeDelete = "..."
       end
 
       def provision
-        self.check_docker
-        self.install_server if config.role == 'server'
-        self.configure_server
-        if config.install_agent
-          self.install_agent
-          self.configure_agent
+        @machine.ui.info "Provisioning #{@machine.name} (#{@machine.id})"
+        self.checkDocker
+        self.installServer if config.role == 'server'
+        self.configureServer
+        if config.agent
+          self.installAgent
+          #self.configureAgent
         end
+        @machine.ui.info "Provisioning of #{@machine.name} (#{@machine.id}) done"
       end
 
       # determines if we can reach the docker daemon
-      def check_docker
+      def checkDocker
+        @machine.ui.info "Checking communication to docker daemon"
         unless @machine.communicate.test('sh -c sleep 3; sudo docker info')
           @machine.ui.error 'Could not connect to docker daemon'
           raise Errors::DockerConnection
         end
+        @machine.ui.detail "Communication successful"
       end
 
       # installs the rancher server at the supplied version
-      def install_server
+      def installServer
+        @machine.ui.info "Installing rancher server instance"
+        @machine.ui.detail "Check for running rancher server container"
         # check to see if the rancher server is already running
         unless @machine.communicate.test('sudo docker inspect rancher-server')
-          image = "#{config.rancher_server_image}:#{config.version}"
-
+          @machine.ui.detail "Rancher server container not running"
           # pull rancher server image if its not already there
-          image_check_cmd = "sudo docker images | awk '{ print $1\":\"$2 }' | grep -q #{image}"
-          unless @machine.communicate.test(image_check_cmd)
-            @machine.ui.info "Pulling Rancher server image: #{image}..."
+          image = "#{@config.rancherServerImage}:#{@config.version}"
+          imageCheckCmd = "sudo docker images | awk '{ print $1\":\"$2 }' | grep -q #{image}"
+          unless @machine.communicate.test(imageCheckCmd)
+            @machine.ui.detail "Pulling Rancher server image: #{image}..."
             unless @machine.communicate.sudo("docker pull #{image}")
               @machine.ui.error "Could not pull Rancher server image"
               raise Errors::RancherServerContainer
             end
           end
 
-          @machine.ui.info "Starting server container: #{image}..."
-          docker_cmd = "docker run -d --restart=always --name rancher-server -p #{@config.port}:8080"
-
+          dockerCmd = "docker run -d --restart=always --name rancher-server -p #{@config.port}:8080"
           # add any user supplied args to the docker command
-          unless config.server_args.nil?
-            docker_cmd = "#{docker_cmd} #{config.server_args}"
+          unless config.args.nil?
+            dockerCmd = "#{dockerCmd} #{config.args}"
           end
 
-          # start the server and error if there is a failure
-          unless @machine.communicate.sudo("#{docker_cmd} #{image}")
+          @machine.ui.detail "Starting server container: #{image}..."
+          unless @machine.communicate.sudo("#{dockerCmd} #{image}")
             @machine.ui.error 'Could not start Rancher server container'
             raise Errors::RancherServerContainer
           end
 
-          # wait for the server api to come online
-          @machine.ui.detail 'Waiting for server API to become available...'
-          unless @rancher.wait_for_api
+          @machine.ui.detail 'Waiting for rancher server API to become available...'
+          unless @rancher.waitForApi
             raise Errors::ApiConnectionTimeout,
               :host => @config.hostname,
               :port => @config.port
           end
-
           # gratuitous pause for the server api
           sleep 5
         end
+        @machine.ui.detail "Rancher server container running on http://#{@config.hostname}:#{@config.port}"
       end
 
       # configures a running server with the required settings
-      def configure_server
-        # get the specified project
-        @machine.ui.detail "Determining project id for '#{@config.project}'"
-        project = @rancher.get_project @config.project
-
-        # create the project if neccessary
-        if project.nil?
-          @machine.ui.detail "Project does not exist, creating now..."
-          @rancher.create_project @config.project, @config.project_type, cluster_id
-          sleep 2
-          project = @rancher.get_project @config.project
-          raise Errors::ProjectNotFound if project.nil?
-        else
-          @machine.ui.detail "#{@config.project} has id #{project[id]}"
-        end
-
-        # set the default project for the admin user
-        user_id = @rancher.get_admin_id
-        @machine.ui.detail "Determining admin id '#{user_id}'"
-        #@rancher.set_default_project user_id, project_id
-        #@machine.ui.detail "Set default project '#{project_id}' for '#{user_id}'"
-
-        # attempt to retrieve a registration token, otherwise create one
-        @machine.ui.detail "Determining registration token for '#{project_id}'"
-        unless @rancher.get_registration_token cluster_id
-          @machine.ui.detail "Registration tokens have not been created, creating now..."
-          #@rancher.create_registration_token project_id
-
-          # set the api.host setting required for agents
-          @rancher.configure_setting 'api.host', "http://#{@config.hostname}:#{@config.port}"
-          sleep(2)
-
-          # verify that the registration token was created
-          raise Errors::RegistrationTokenMissing unless @rancher.get_registration_token project_id
-        end
+      def configureServer
+        @machine.ui.info "Configuring rancher server instance"
+        id = @rancher.getClusterIdByName @config.project
+        @machine.ui.detail "Using cluster id '#{id}' for project '#{@config.project}'"
+        @machine.ui.detail "Setting registration host to http://#{@config.hostname}:#{@config.port}"
+        @rancher.configureSetting 'api.host', "http://#{@config.hostname}:#{@config.port}"
+        @machine.ui.detail "Determining registration token for cluster '#{id}'"
+        registrationToken = @rancher.getRegistrationToken id
+        raise Errors::RegistrationTokenMissing unless registrationToken
+        @machine.ui.detail "Got registration token for rancher agents"
+        @machine.ui.detail "-> #{registrationToken['registrationUrl']}"
       end
 
       # runs the agent container on the guest
-      def install_agent
+      def installAgent
+        @machine.ui.info "Installing rancher agent"
         # if the agent container is not running, start it
+        @machine.ui.detail "Check for running rancher agent container"
         unless @machine.communicate.test('sudo docker inspect rancher-agent')
-          # retrieve the default project id
-          project_id = @rancher.get_project_id @config.project
-          cluster_id = @rancher.get_cluster_id @config.project
-          raise Errors::ProjectNotFound if project_id.nil?
+          projectId = @rancher.getProjectId @config.project
+          clusterId = @rancher.getClusterIdByName @config.project
+          raise Errors::ProjectNotFound if projectId.nil?
+          @machine.ui.detail "Using project '#{@config.project}' with id '#{projectId}' with cluster '#{clusterId}'"
 
-          # retrieve the registration token
-          @machine.ui.detail 'Retrieving agent registration command...'
-          registration_token = @rancher.get_registration_token cluster_id
-          raise Errors::RegistrationTokenMissing if registration_token.nil?
-          docker_cmd = registration_token['hostCommand']
+          @machine.ui.detail "Retrieving agent registration command for cluster '#{clusterId}'"
+          registrationToken = @rancher.getRegistrationToken clusterId
+
+          raise Errors::RegistrationTokenMissing if registrationToken.nil?
+          dockerCmd = registrationToken['hostCommand']
 
           # apply a default label with the machine id used for
           # checking that the agent has indeed registered the host
@@ -130,53 +113,35 @@ module VagrantPlugins
           unless config.labels.nil?
             labels = "#{labels}&#{config.labels.join('&')}"
           end
-
           extra_args = "-e 'CATTLE_HOST_LABELS=#{labels}' --name rancher-agent-bootstrap"
-          docker_cmd = docker_cmd.sub('docker run', "docker run #{extra_args}")
+          dockerCmd = dockerCmd.sub('docker run', "docker run #{extra_args}")
 
-          # pull rancher agent image if its not already there
-          image_check_cmd = "sudo docker images | awk '{ print $1\":\"$2 }' | grep -q #{registration_token['image']}"
-          unless @machine.communicate.test(image_check_cmd)
-            @machine.ui.info "Pulling Rancher agent image: #{registration_token['image']}..."
-            unless @machine.communicate.sudo("docker pull #{registration_token['image']}")
+          imageCheckCmd = "sudo docker images | awk '{ print $1\":\"$2 }' | grep -q #{registrationToken['image']}"
+          unless @machine.communicate.test(imageCheckCmd)
+            @machine.ui.info "Pulling Rancher agent image: #{registrationToken['image']}..."
+            unless @machine.communicate.sudo("docker pull #{registrationToken['image']}")
               @machine.ui.error "Could not pull Rancher agent image"
               raise Errors::RancherServerContainer
             end
           end
 
           # start the agent container
-          @machine.ui.info "Starting agent container: #{registration_token['image']}..."
-          unless @machine.communicate.sudo(docker_cmd)
-            @machine.ui.error 'Could not start Rancher agent container'
+          @machine.ui.info "Starting agent container: #{registrationToken['image']}..."
+          unless @machine.communicate.sudo(dockerCmd)
+            @machine.ui.error "Could not start Rancher agent container"
             raise Errors::RancherAgentContainer
           end
 
           # wait for the agent to register the host in rancher (checks
           # for the @machine.id in the host labels)
-          @machine.ui.detail 'Waiting for agent to register...'
-          unless @rancher.wait_for_agent project_id, @machine.id
+          @machine.ui.detail "Waiting for agent to register '#{@config.project}' with id '#{projectId}' on machine '#{@machine.id}'"
+          unless @rancher.waitForAgent projectId, @machine.id
             raise Errors::AgentRegistrationTimeout,
               :host => @config.hostname,
               :port => @config.port
           end
         end
-      end
-
-      # configure the agent in rancher
-      def configure_agent
-        # retrieve the project id
-        project_id = @rancher.get_project_id @config.project
-        raise Errors::ProjectNotFound if project_id.nil?
-
-        # retrieve the host by the @machine.id label
-        host = @rancher.get_host project_id, @machine.id
-        raise Errors::HostNotFound, :project_id => project_id if host.nil?
-
-        # when deactivate is set and the host is active, deactivate it
-        if @config.deactivate and host['state'] == 'active'
-          @machine.ui.info "Deactivating agent..."
-          @rancher.deactivate_host project_id, host['id']
-        end
+        @machine.ui.detail "Rancher agent container running on http://#{@config.hostname}:#{@config.port}"
       end
     end
   end

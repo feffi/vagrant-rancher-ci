@@ -1,23 +1,25 @@
-# Official CoreOS channel. Either alpha, beta or stable
-$update_channel = "alpha"
+# The OS to use (here coreos alpha)
+$os = {
+  # Vagrant box configuration details image of the os to use
+  "vm" => "coreos-alpha",
 
-# Vagrant box configuration details image of the os to use
-$os = "coreos-%s" % $update_channel
+  # Version of the box image
+  "version" => '>= 1548.0.0',
 
-# Version of the box image
-$os_version = '>= 1548.0.0'
-
-# URL to pull CoreOS image from
-$os_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json" % $update_channel
+  # URL to pull OS image from
+  "url" => "http://alpha.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json"
+}
 
 # Tag of the rancher/server image to run
-$rancher_version = 'v2.0.0-alpha10'
+$rancher = {
+  "version" => 'v2.0.0-alpha10'
+}
 
 # IP prefix to use when assigning box ip addresses
-$ip_prefix = '10.2.0'
+$ipPrefix = '10.2.0'
 
 # Enable syncing of the current directory to the /vagrant path on the guest
-$folder_sync = false
+$folderSync = false
 
 # Proxy configure on boxes, defaults to none if not defined
 #$proxies = {
@@ -33,11 +35,13 @@ $boxes = [
     "role"   => "server",
     "memory" => "1536",
     "labels" => [],
+    "user"   => "admin",
+    "kind"   => "admin"
   },
   {
     "name"   => "k8s-node",
-    "count"  => 1,
-    "memory" => "512",
+    "count"  => 4,
+    "memory" => "1024",
     "labels" => []
   },
 ]
