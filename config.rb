@@ -37,7 +37,7 @@ $boxes = [
     {
       "name"   => "cattle-node",
       "count"  => 2,
-      "memory" => "512",
+      "memory" => "4096",
       "labels" => []
     }
 #    {
